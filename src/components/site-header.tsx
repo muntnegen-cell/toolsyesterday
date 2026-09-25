@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 export async function SiteHeader() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  const signedIn = Boolean(data?.claims && !data.claims.is_anonymous);
+  const hasSession = Boolean(data?.claims);
+  const signedIn = hasSession && !data?.claims.is_anonymous;
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -24,6 +25,11 @@ export async function SiteHeader() {
           <Link href="/#prijzen" className="hidden rounded-md px-3 py-2 text-muted-foreground hover:text-foreground sm:block">
             Prijzen
           </Link>
+          {hasSession && (
+            <Link href="/account" className="rounded-md px-3 py-2 text-muted-foreground hover:text-foreground">
+              Mijn rapporten
+            </Link>
+          )}
           {signedIn ? (
             <form action="/auth/signout" method="post">
               <Button variant="ghost" size="sm" type="submit">

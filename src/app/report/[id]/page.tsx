@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnalysisPending } from "@/components/report/analysis-pending";
@@ -9,6 +9,8 @@ import { FullReport } from "@/components/report/full-report";
 import { ReportHeader } from "@/components/report/report-header";
 import { TeaserFindings } from "@/components/report/teaser-findings";
 import { Paywall } from "@/components/paywall/paywall";
+import { SaveAccessBanner } from "@/components/paywall/save-access-banner";
+import { fulfillCheckoutSession } from "@/lib/billing/fulfillment";
 import { createClient } from "@/lib/supabase/server";
 import { fullReportSchema, teaserSchema } from "@/types/analysis";
 
@@ -20,8 +22,11 @@ export const metadata: Metadata = {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const STALE_AFTER_MS = 5 * 60 * 1000;
 
-export default async function ReportPage({ params }: PageProps<"/report/[id]">) {
+export default async function ReportPage({ params, searchParams }: PageProps<"/report/[id]">) {
   const { id } = await params;
+  const query = await searchParams;
+  const checkout = typeof query.checkout === "string" ? query.checkout : null;
+  const sessionId = typeof query.session_id === "string" ? query.session_id : null;
   if (!UUID.test(id)) notFound();
 
   const supabase = await createClient();
@@ -59,13 +64,22 @@ export default async function ReportPage({ params }: PageProps<"/report/[id]">) 
     );
   }
 
-  // RLS only returns this row after payment for this document or with an active Pro subscription.
-  const { data: reportRow } = await supabase
-    .from("document_reports")
-    .select("report")
-    .eq("document_id", id)
-    .maybeSingle();
+  let reportRow = await getReport(supabase, id);
+
+  // Back from Stripe before the webhook arrived: fulfil now from the session itself (idempotent).
+  let paymentState: "none" | "processing" | "awaiting" = "none";
+  if (!reportRow && checkout === "success" && sessionId?.startsWith("cs_")) {
+    const result = await fulfillCheckoutSession(sessionId).catch((err) => {
+      console.error("Fulfillment on return from checkout failed", err);
+      return null;
+    });
+    reportRow = await getReport(supabase, id);
+    if (!reportRow) paymentState = result && !result.fulfilled && result.reason === "unpaid" ? "awaiting" : "processing";
+  }
   const report = reportRow ? fullReportSchema.safeParse(reportRow.report) : null;
+
+  const { data: auth } = await supabase.auth.getClaims();
+  const isAnonymous = Boolean(auth?.claims?.is_anonymous);
 
   const header = (
     <ReportHeader
@@ -80,6 +94,10 @@ export default async function ReportPage({ params }: PageProps<"/report/[id]">) 
   if (report) {
     return (
       <ReportShell>
+        {checkout === "success" && (
+          <Notice tone="success">Betaling gelukt — je volledige rapport staat hieronder.</Notice>
+        )}
+        {isAnonymous && <SaveAccessBanner next={`/report/${id}`} />}
         {header}
         {report.success ? (
           <FullReport report={report.data} />
@@ -94,8 +112,26 @@ export default async function ReportPage({ params }: PageProps<"/report/[id]">) 
     );
   }
 
+  if (paymentState === "processing") {
+    return (
+      <ReportShell>
+        {header}
+        <AnalysisPending message="Je betaling wordt verwerkt. Je rapport verschijnt zo automatisch…" />
+      </ReportShell>
+    );
+  }
+
   return (
     <ReportShell>
+      {paymentState === "awaiting" && (
+        <Notice tone="info">
+          Je betaling is nog niet bevestigd door je bank. Je rapport wordt automatisch ontgrendeld zodra de betaling
+          binnen is; je kunt deze pagina later opnieuw openen.
+        </Notice>
+      )}
+      {checkout === "cancelled" && (
+        <Notice tone="info">De betaling is geannuleerd. Er is niets afgeschreven.</Notice>
+      )}
       {header}
       <section aria-labelledby="findings-title" className="flex flex-col gap-4">
         <h2 id="findings-title" className="text-lg font-semibold">
@@ -105,6 +141,32 @@ export default async function ReportPage({ params }: PageProps<"/report/[id]">) 
       </section>
       <Paywall documentId={doc.id} hiddenCount={teaser.data.findings.length} />
     </ReportShell>
+  );
+}
+
+async function getReport(supabase: Awaited<ReturnType<typeof createClient>>, id: string) {
+  // RLS only returns this row after payment for this document or with an active Pro subscription.
+  const { data } = await supabase.from("document_reports").select("report").eq("document_id", id).maybeSingle();
+  return data;
+}
+
+function Notice({ tone, children }: { tone: "success" | "info"; children: React.ReactNode }) {
+  return (
+    <p
+      role="status"
+      className={
+        tone === "success"
+          ? "flex items-center gap-2 rounded-lg border border-risk-low/30 bg-risk-low/10 p-3 text-sm"
+          : "flex items-center gap-2 rounded-lg border bg-muted p-3 text-sm"
+      }
+    >
+      {tone === "success" ? (
+        <CheckCircle2 className="size-4 shrink-0 text-risk-low" aria-hidden />
+      ) : (
+        <Info className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+      )}
+      {children}
+    </p>
   );
 }
 

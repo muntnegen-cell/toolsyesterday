@@ -25,6 +25,20 @@ Micro-SaaS voor freelancers en zzp'ers: upload een PDF-contract, krijg een AI-ri
 5. **Project Settings → API Keys**: kopieer de publishable en secret key naar `.env.local`.
 6. Aanbevolen voor productie: **Authentication → Attack Protection → CAPTCHA** (Cloudflare Turnstile) tegen misbruik van anonieme sessies.
 
+## Stripe instellen
+
+1. **Producten** (Product catalog → Add product, testmodus):
+   - "Volledig Rapport": prijs **€19,00 EUR, eenmalig** → kopieer de `price_…` naar `STRIPE_PRICE_ID_REPORT`.
+   - "Pro Abonnement": prijs **€9,00 EUR, terugkerend per maand** → `STRIPE_PRICE_ID_PRO`.
+2. **Betaalmethoden** (Settings → Payment methods): zet iDEAL, Bancontact en kaarten aan. Checkout toont automatisch wat aan staat.
+3. **Klantportaal** (Settings → Billing → Customer portal): activeer het en sta "abonnement opzeggen" en "betaalmethode wijzigen" toe.
+4. **Webhook** (Developers → Webhooks → Add endpoint), URL `https://<jouw-domein>/api/webhook`, met deze events:
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+   `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`,
+   `customer.subscription.paused`, `customer.subscription.resumed`, `invoice.paid`, `charge.refunded`.
+   Kopieer het signing secret (`whsec_…`) naar `STRIPE_WEBHOOK_SECRET` in Vercel.
+5. **E-mails** (Settings → Customer emails): zet bonnetjes voor geslaagde betalingen aan, zodat klanten een betaalbewijs krijgen.
+
 ## Lokaal starten
 
 ```bash
