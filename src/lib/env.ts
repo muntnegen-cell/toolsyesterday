@@ -7,7 +7,7 @@ const serverSchema = z.object({
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   SUPABASE_SECRET_KEY: z.string().min(1),
   ANTHROPIC_API_KEY: z.string().startsWith("sk-ant-"),
-  ANTHROPIC_MODEL: z.string().min(1).default("claude-sonnet-5"),
+  ANTHROPIC_MODEL: z.string().min(1).default("claude-opus-5"),
   STRIPE_SECRET_KEY: z.string().regex(/^(sk|rk)_(test|live)_/),
   STRIPE_WEBHOOK_SECRET: z.string().startsWith("whsec_"),
   STRIPE_PRICE_ID_REPORT: z.string().startsWith("price_"),
