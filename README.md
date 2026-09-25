@@ -11,6 +11,19 @@ Micro-SaaS voor freelancers en zzp'ers: upload een PDF-contract, krijg een AI-ri
 - Accounts: Supabase, Stripe, Anthropic, Vercel
 - [Stripe CLI](https://docs.stripe.com/stripe-cli) voor lokale webhooks
 
+## Supabase instellen
+
+1. Maak een project aan op [supabase.com](https://supabase.com) (regio: `eu-central-1` Frankfurt, i.v.m. AVG).
+2. **SQL Editor → New query** → plak `supabase/migrations/20260925000000_init.sql` → **Run**.
+3. **Authentication → Sign In / Providers**:
+   - **Email**: aan (magic link).
+   - **Allow anonymous sign-ins**: aan (bezoekers kunnen uploaden zonder account).
+4. **Authentication → URL Configuration**:
+   - Site URL: `http://localhost:3000` (later je productiedomein).
+   - Redirect URLs: `http://localhost:3000/auth/callback` en `https://<jouw-domein>/auth/callback`.
+5. **Project Settings → API Keys**: kopieer de publishable en secret key naar `.env.local`.
+6. Aanbevolen voor productie: **Authentication → Attack Protection → CAPTCHA** (Cloudflare Turnstile) tegen misbruik van anonieme sessies.
+
 ## Lokaal starten
 
 ```bash
