@@ -7,6 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 
+const AUTH_ERRORS: Record<string, string> = {
+  over_email_send_rate_limit: "Je hebt net al een link aangevraagd. Wacht even en probeer het opnieuw.",
+  over_request_rate_limit: "Te veel pogingen. Wacht even en probeer het opnieuw.",
+  email_address_invalid: "Dit e-mailadres is niet geldig.",
+  validation_failed: "Dit e-mailadres is niet geldig.",
+};
+
+function authErrorMessage(error: { code?: string }) {
+  return (error.code && AUTH_ERRORS[error.code]) || "Inloggen is nu niet gelukt. Probeer het later opnieuw.";
+}
+
 type State = { kind: "idle" } | { kind: "sending" } | { kind: "sent"; email: string } | { kind: "error"; message: string };
 
 export function LoginForm({ next }: { next: string }) {
@@ -27,14 +38,14 @@ export function LoginForm({ next }: { next: string }) {
     if (data.user?.is_anonymous) {
       const { error } = await supabase.auth.updateUser({ email }, { emailRedirectTo });
       if (!error) return setState({ kind: "sent", email });
-      if (error.code !== "email_exists") return setState({ kind: "error", message: error.message });
+      if (error.code !== "email_exists") return setState({ kind: "error", message: authErrorMessage(error) });
     }
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo, shouldCreateUser: true },
     });
-    setState(error ? { kind: "error", message: error.message } : { kind: "sent", email });
+    setState(error ? { kind: "error", message: authErrorMessage(error) } : { kind: "sent", email });
   }
 
   if (state.kind === "sent") {

@@ -1,5 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/types/database";
+import { UserFacingError } from "@/lib/errors";
 
 export function createClient() {
   return createBrowserClient<Database>(
@@ -16,7 +17,8 @@ export async function ensureSession(supabase = createClient()) {
 
   const { data: anon, error } = await supabase.auth.signInAnonymously();
   if (error || !anon.session) {
-    throw new Error(error?.message ?? "Kon geen sessie starten. Probeer het opnieuw.");
+    console.error("signInAnonymously failed", error);
+    throw new UserFacingError("Kon geen veilige sessie starten. Controleer je verbinding en probeer het opnieuw.");
   }
   return anon.session;
 }

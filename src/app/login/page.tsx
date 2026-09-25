@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { LoginForm } from "./login-form";
@@ -21,10 +19,6 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">
       <div className="flex w-full max-w-sm flex-col gap-6">
-        <Link href="/" className="flex items-center justify-center gap-2 font-semibold">
-          <ShieldCheck className="size-5" aria-hidden />
-          Niche Doc Scanner
-        </Link>
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Inloggen</CardTitle>
