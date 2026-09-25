@@ -54,6 +54,7 @@ export type Database = {
           risk_score: number | null;
           teaser: Json | null;
           error_message: string | null;
+          ip_hash: string | null;
           unlocked_at: string | null;
           created_at: string;
           updated_at: string;
@@ -69,6 +70,7 @@ export type Database = {
           risk_score?: number | null;
           teaser?: Json | null;
           error_message?: string | null;
+          ip_hash?: string | null;
           unlocked_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -84,6 +86,7 @@ export type Database = {
           risk_score?: number | null;
           teaser?: Json | null;
           error_message?: string | null;
+          ip_hash?: string | null;
           unlocked_at?: string | null;
           created_at?: string;
           updated_at?: string;

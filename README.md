@@ -14,7 +14,8 @@ Micro-SaaS voor freelancers en zzp'ers: upload een PDF-contract, krijg een AI-ri
 ## Supabase instellen
 
 1. Maak een project aan op [supabase.com](https://supabase.com) (regio: `eu-central-1` Frankfurt, i.v.m. AVG).
-2. **SQL Editor → New query** → plak `supabase/migrations/20260925000000_init.sql` → **Run**.
+2. **SQL Editor → New query** → voer de bestanden in `supabase/migrations/` één voor één uit, op volgorde van naam:
+   `20260925000000_init.sql`, daarna `20260926000000_analysis_limits.sql`.
 3. **Authentication → Sign In / Providers**:
    - **Email**: aan (magic link).
    - **Allow anonymous sign-ins**: aan (bezoekers kunnen uploaden zonder account).
