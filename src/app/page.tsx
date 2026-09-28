@@ -304,7 +304,7 @@ function PriceCard({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>
-          <span className="text-3xl font-bold text-foreground tabular-nums">{price}</span> {cadence}
+          <span className="text-3xl font-bold text-foreground">{price}</span> {cadence}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1">

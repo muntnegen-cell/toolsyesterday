@@ -92,3 +92,29 @@ stripe listen --forward-to localhost:3000/api/webhook
 │   │   └── supabase/             # browser/server/admin clients (fase 2)
 │   └── types/                    # Database- en analyse-types
 ```
+
+## Deployment naar Vercel (`contract.facturify.nl`)
+
+1. **Merge naar `main`.** Vercel deployt productie vanaf de standaardbranch.
+2. **Project importeren**: vercel.com → Add New → Project → importeer `muntnegen-cell/toolsyesterday`.
+   Framework wordt automatisch herkend (Next.js). De regio staat via `vercel.json` op `fra1` (Frankfurt, dicht bij Supabase).
+3. **Environment variables** (Settings → Environment Variables, scope *Production*): alle variabelen uit
+   `.env.example`, met `NEXT_PUBLIC_APP_URL=https://contract.facturify.nl` en je **live** Stripe-waarden. Deploy daarna opnieuw.
+4. **Domein**: Settings → Domains → `contract.facturify.nl` toevoegen. Maak bij de DNS-provider van facturify.nl
+   een `CNAME`-record `contract` met de waarde die Vercel toont. Het SSL-certificaat komt automatisch.
+5. **Supabase** → Authentication → URL Configuration: Site URL `https://contract.facturify.nl`,
+   Redirect URL `https://contract.facturify.nl/auth/callback`.
+   Stel onder Authentication → Emails een **eigen SMTP-server** in (bijv. Resend of Postmark, afzender `@facturify.nl`):
+   de ingebouwde mailservice van Supabase verstuurt maar een paar e-mails per uur en is niet bedoeld voor productie.
+6. **Stripe live**: maak de twee producten opnieuw aan in live mode, en een webhook-endpoint
+   `https://contract.facturify.nl/api/webhook` met dezelfde events als hierboven. Zet de live keys en het nieuwe `whsec_…` in Vercel.
+7. **Anthropic**: stel in de console een maandelijks uitgavenlimiet in.
+8. **Rooktest**: scan een contract, betaal €19 met een echte kaart, controleer `/admin`, en betaal terug via Stripe
+   (het rapport moet weer vergrendelen).
+
+### Vóór je live gaat
+
+- Privacyverklaring (AVG): contracten bevatten persoonsgegevens. Verwerkers: Supabase, Anthropic, Stripe, Vercel.
+- Algemene voorwaarden, en KvK- en btw-nummer in de footer (Stripe vraagt hier ook om).
+- Bewaartermijn voor geüploade contracten bepalen en communiceren.
+- CAPTCHA aanzetten in Supabase (zie hierboven).

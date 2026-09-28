@@ -92,7 +92,7 @@ export function Paywall({ documentId, hiddenCount }: { documentId: string; hidde
               <CardHeader>
                 <CardTitle>{price.label}</CardTitle>
                 <CardDescription>
-                  <span className="text-3xl font-bold text-foreground tabular-nums">
+                  <span className="text-3xl font-bold text-foreground">
                     {formatEuro(price.amountCents)}
                   </span>{" "}
                   {price.cadence}

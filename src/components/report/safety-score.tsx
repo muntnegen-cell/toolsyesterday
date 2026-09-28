@@ -33,7 +33,7 @@ export function SafetyScore({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={cn("font-bold tabular-nums", size === "md" ? "text-3xl" : "text-xl")}>{score}%</span>
+        <span className={cn("font-bold", size === "md" ? "text-3xl" : "text-xl")}>{score}%</span>
         <span className={cn("font-medium", size === "md" ? "text-sm" : "text-xs", tone.className)}>{tone.label}</span>
       </div>
       <span className="sr-only">

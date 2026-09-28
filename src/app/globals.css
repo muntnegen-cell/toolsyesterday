@@ -37,6 +37,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-chart-bar: var(--chart-bar);
   --color-risk-high: var(--risk-high);
   --color-risk-medium: var(--risk-medium);
   --color-risk-low: var(--risk-low);
@@ -82,6 +83,7 @@
   --risk-high: oklch(0.577 0.245 27.325);
   --risk-medium: oklch(0.795 0.184 86.047);
   --risk-low: oklch(0.627 0.194 149.214);
+  --chart-bar: #2a78d6;
 }
 
 .dark {
@@ -119,6 +121,7 @@
   --risk-high: oklch(0.704 0.191 22.216);
   --risk-medium: oklch(0.852 0.199 91.936);
   --risk-low: oklch(0.723 0.219 149.579);
+  --chart-bar: #3987e5;
 }
 
 @layer base {
