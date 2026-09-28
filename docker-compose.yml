@@ -1,0 +1,42 @@
+# Start: docker compose up -d --build   (leest .env voor build args en runtime secrets)
+services:
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:?zet NEXT_PUBLIC_APP_URL in .env}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?zet NEXT_PUBLIC_SUPABASE_URL in .env}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?zet NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env}
+    env_file: .env
+    restart: unless-stopped
+    # Only reachable from the server itself; the public entry point is the reverse proxy.
+    # Set APP_PORT in .env if 3000 is already taken by another app on the server.
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # Skip this service (remove it or use `docker compose up -d app`) if the server already runs
+  # nginx/Traefik/Caddy on ports 80/443 — point that proxy at 127.0.0.1:3000 instead.
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-contract.renderyesterday.com}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  caddy_data:
+  caddy_config:

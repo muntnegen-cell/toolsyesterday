@@ -1,0 +1,13 @@
+# Secrets never enter the image; runtime env comes from docker compose.
+.env*
+!.env.example
+node_modules
+.next
+.git
+.github
+.tmp-test
+*.md
+!README.md
+Dockerfile
+docker-compose.yml
+deploy

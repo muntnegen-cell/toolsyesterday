@@ -3,12 +3,12 @@
 Micro-SaaS voor freelancers en zzp'ers: upload een PDF-contract, krijg een AI-risicoscan
 (Anthropic Claude), ontgrendel het volledige rapport via Stripe (€19 eenmalig of €9/maand Pro).
 
-**Stack:** Next.js 16 (App Router, TypeScript) · Tailwind CSS v4 · Shadcn UI · Supabase · Stripe · pdf-parse · Anthropic API · Vercel
+**Stack:** Next.js 16 (App Router, TypeScript) · Tailwind CSS v4 · Shadcn UI · Supabase · Stripe · pdf-parse · Anthropic API · Docker op Hetzner
 
 ## Vereisten
 
 - Node.js **≥ 22.3** (vereist door pdf-parse v2)
-- Accounts: Supabase, Stripe, Anthropic, Vercel
+- Accounts: Supabase, Stripe, Anthropic; een Hetzner-server met Docker
 - [Stripe CLI](https://docs.stripe.com/stripe-cli) voor lokale webhooks
 
 ## Supabase instellen
@@ -36,7 +36,7 @@ Micro-SaaS voor freelancers en zzp'ers: upload een PDF-contract, krijg een AI-ri
    `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
    `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`,
    `customer.subscription.paused`, `customer.subscription.resumed`, `invoice.paid`, `charge.refunded`.
-   Kopieer het signing secret (`whsec_…`) naar `STRIPE_WEBHOOK_SECRET` in Vercel.
+   Kopieer het signing secret (`whsec_…`) naar `STRIPE_WEBHOOK_SECRET` in de `.env` op de server.
 5. **E-mails** (Settings → Customer emails): zet bonnetjes voor geslaagde betalingen aan, zodat klanten een betaalbewijs krijgen.
 
 ## Lokaal starten
@@ -93,28 +93,101 @@ stripe listen --forward-to localhost:3000/api/webhook
 │   └── types/                    # Database- en analyse-types
 ```
 
-## Deployment naar Vercel (`contract.facturify.nl`)
+## Deployment op Hetzner (`contract.renderyesterday.com`)
 
-1. **Merge naar `main`.** Vercel deployt productie vanaf de standaardbranch.
-2. **Project importeren**: vercel.com → Add New → Project → importeer `muntnegen-cell/toolsyesterday`.
-   Framework wordt automatisch herkend (Next.js). De regio staat via `vercel.json` op `fra1` (Frankfurt, dicht bij Supabase).
-3. **Environment variables** (Settings → Environment Variables, scope *Production*): alle variabelen uit
-   `.env.example`, met `NEXT_PUBLIC_APP_URL=https://contract.facturify.nl` en je **live** Stripe-waarden. Deploy daarna opnieuw.
-4. **Domein**: Settings → Domains → `contract.facturify.nl` toevoegen. Maak bij de DNS-provider van facturify.nl
-   een `CNAME`-record `contract` met de waarde die Vercel toont. Het SSL-certificaat komt automatisch.
-5. **Supabase** → Authentication → URL Configuration: Site URL `https://contract.facturify.nl`,
-   Redirect URL `https://contract.facturify.nl/auth/callback`.
-   Stel onder Authentication → Emails een **eigen SMTP-server** in (bijv. Resend of Postmark, afzender `@facturify.nl`):
-   de ingebouwde mailservice van Supabase verstuurt maar een paar e-mails per uur en is niet bedoeld voor productie.
-6. **Stripe live**: maak de twee producten opnieuw aan in live mode, en een webhook-endpoint
-   `https://contract.facturify.nl/api/webhook` met dezelfde events als hierboven. Zet de live keys en het nieuwe `whsec_…` in Vercel.
-7. **Anthropic**: stel in de console een maandelijks uitgavenlimiet in.
-8. **Rooktest**: scan een contract, betaal €19 met een echte kaart, controleer `/admin`, en betaal terug via Stripe
-   (het rapport moet weer vergrendelen).
+De app draait als Docker-container (Next.js standalone) achter Caddy, dat automatisch HTTPS regelt.
+
+### 1. Server voorbereiden (eenmalig)
+
+- Hetzner Cloud-server met Ubuntu 24.04, bij voorkeur in **Falkenstein of Nürnberg** (dicht bij Supabase Frankfurt).
+  Zowel x86 (CX/CPX) als ARM (CAX) werkt; minimaal 2 GB RAM voor de build.
+- Firewall (Hetzner Cloud Firewall of `ufw`): alleen poort **22, 80 en 443** open.
+- Docker installeren: `curl -fsSL https://get.docker.com | sh`
+
+### 2. DNS
+
+Bij de DNS-provider van renderyesterday.com:
+
+| Type | Naam | Waarde |
+|---|---|---|
+| `A` | `contract` | IPv4-adres van de server |
+| `AAAA` | `contract` | IPv6-adres van de server (optioneel) |
+
+### 3. Code en configuratie
+
+```bash
+git clone https://github.com/muntnegen-cell/toolsyesterday.git /opt/niche-doc-scanner
+cd /opt/niche-doc-scanner
+cp .env.example .env
+nano .env   # productiewaarden invullen, zie hieronder
+chmod 600 .env
+```
+
+In `.env` op de server:
+- `NEXT_PUBLIC_APP_URL=https://contract.renderyesterday.com`
+- de Supabase-, Anthropic- en **live** Stripe-waarden
+- `ADMIN_EMAILS` met je eigen e-mailadres
+
+`.env` staat niet in git en komt niet in de image: compose geeft de `NEXT_PUBLIC_*`-waarden als build args door
+(ze worden in de JavaScript gebakken) en alle waarden als runtime-omgeving.
+
+### 4. Starten
+
+```bash
+docker compose up -d --build
+docker compose ps          # app moet "healthy" worden
+docker compose logs -f app
+```
+
+**Draait er al een reverse proxy op de server** (bijv. voor `secure.renderyesterday.com`)? Start dan alleen de app
+(`docker compose up -d --build app`) en laat die proxy doorsturen naar `127.0.0.1:3000`. Is poort 3000 al bezet,
+zet dan bijvoorbeeld `APP_PORT=3100` in `.env` en gebruik die poort. Voor nginx:
+
+```nginx
+server {
+    server_name contract.renderyesterday.com;
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # $remote_addr (niet $proxy_add_x_forwarded_for): voorkomt dat bezoekers hun IP vervalsen
+        # om de limiet op gratis scans te omzeilen.
+        proxy_set_header X-Forwarded-For $remote_addr;
+        # Een analyse kan tot enkele minuten duren; de standaard van 60 s is te kort.
+        proxy_read_timeout 300s;
+    }
+    # + certbot/Let's Encrypt voor HTTPS
+}
+```
+
+De meegeleverde Caddy doet dit allemaal standaard goed.
+
+### 5. Updates uitrollen
+
+```bash
+cd /opt/niche-doc-scanner && git pull && docker compose up -d --build
+```
+
+### 6. Externe diensten koppelen
+
+- **Supabase** → Authentication → URL Configuration: Site URL `https://contract.renderyesterday.com`,
+  Redirect URL `https://contract.renderyesterday.com/auth/callback`.
+  Stel onder Authentication → Emails een **eigen SMTP-server** in (bijv. Resend of Postmark, afzender `@renderyesterday.com`):
+  de ingebouwde mailservice van Supabase verstuurt maar een paar e-mails per uur en is niet bedoeld voor productie.
+- **Stripe live**: maak de twee producten opnieuw aan in live mode, en een webhook-endpoint
+  `https://contract.renderyesterday.com/api/webhook` met dezelfde events als hierboven. Zet de live keys en het nieuwe
+  `whsec_…` in `.env` en voer `docker compose up -d` opnieuw uit.
+- **Anthropic**: stel in de console een maandelijks uitgavenlimiet in.
+
+### 7. Rooktest
+
+Scan een contract, betaal €19 met een echte kaart, controleer `/admin`, en betaal terug via Stripe
+(het rapport moet weer vergrendelen).
 
 ### Vóór je live gaat
 
-- Privacyverklaring (AVG): contracten bevatten persoonsgegevens. Verwerkers: Supabase, Anthropic, Stripe, Vercel.
+- Automatische beveiligingsupdates op de server: `apt install unattended-upgrades`.
+- Privacyverklaring (AVG): contracten bevatten persoonsgegevens. Verwerkers: Supabase, Anthropic, Stripe, Hetzner.
 - Algemene voorwaarden, en KvK- en btw-nummer in de footer (Stripe vraagt hier ook om).
 - Bewaartermijn voor geüploade contracten bepalen en communiceren.
 - CAPTCHA aanzetten in Supabase (zie hierboven).
