@@ -1,5 +1,9 @@
 # Automatic HTTPS (Let's Encrypt) for the domain; requires the DNS record and ports 80/443 open.
 {$DOMAIN} {
 	encode zstd gzip
-	reverse_proxy app:3000
+	reverse_proxy app:3000 {
+		# Overwrite rather than append: the analyze route keys its free-scan limit on the
+		# first X-Forwarded-For entry, which a visitor could otherwise supply themselves.
+		header_up X-Forwarded-For {remote_host}
+	}
 }
