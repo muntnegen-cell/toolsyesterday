@@ -4,7 +4,7 @@ import { safeNextPath } from "@/lib/safe-redirect";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
-  title: "Inloggen — Niche Doc Scanner",
+  title: "Inloggen — Addertje",
 };
 
 const errorMessages: Record<string, string> = {

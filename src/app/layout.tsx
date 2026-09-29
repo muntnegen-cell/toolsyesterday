@@ -20,7 +20,7 @@ const description =
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Niche Doc Scanner — Scan je contract op juridische risico's",
+  title: "Addertje — Scan je contract op juridische risico's",
   description,
   openGraph: {
     type: "website",

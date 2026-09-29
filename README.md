@@ -1,6 +1,7 @@
-# Niche Doc Scanner
+# Addertje
 
-Micro-SaaS voor freelancers en zzp'ers: upload een PDF-contract, krijg een AI-risicoscan
+Micro-SaaS voor freelancers en zzp'ers: vind het addertje onder het gras voor je tekent.
+Upload een PDF-contract, krijg een AI-risicoscan
 (Anthropic Claude), ontgrendel het volledige rapport via Stripe (€19 eenmalig of €9/maand Pro).
 
 **Stack:** Next.js 16 (App Router, TypeScript) · Tailwind CSS v4 · Shadcn UI · Supabase · Stripe · pdf-parse · Anthropic API · Docker op Hetzner
@@ -116,8 +117,8 @@ Bij de DNS-provider van renderyesterday.com:
 ### 3. Code en configuratie
 
 ```bash
-git clone https://github.com/muntnegen-cell/toolsyesterday.git /opt/niche-doc-scanner
-cd /opt/niche-doc-scanner
+git clone https://github.com/muntnegen-cell/toolsyesterday.git /opt/addertje
+cd /opt/addertje
 cp .env.example .env
 nano .env   # productiewaarden invullen, zie hieronder
 chmod 600 .env
@@ -165,7 +166,7 @@ De meegeleverde Caddy doet dit allemaal standaard goed.
 ### 5. Updates uitrollen
 
 ```bash
-cd /opt/niche-doc-scanner && git pull && docker compose up -d --build
+cd /opt/addertje && git pull && docker compose up -d --build
 ```
 
 ### 6. Externe diensten koppelen

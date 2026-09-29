@@ -8,7 +8,7 @@ let stripe: Stripe | undefined;
 export function getStripe() {
   stripe ??= new Stripe(env.stripe().STRIPE_SECRET_KEY, {
     maxNetworkRetries: 2,
-    appInfo: { name: "Niche Doc Scanner" },
+    appInfo: { name: "Addertje" },
   });
   return stripe;
 }

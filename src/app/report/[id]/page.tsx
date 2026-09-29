@@ -15,7 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fullReportSchema, teaserSchema } from "@/types/analysis";
 
 export const metadata: Metadata = {
-  title: "Contractrapport — Niche Doc Scanner",
+  title: "Contractrapport — Addertje",
   robots: { index: false, follow: false },
 };
 

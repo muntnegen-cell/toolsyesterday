@@ -16,7 +16,7 @@ export async function SiteHeader() {
           <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <ShieldCheck className="size-4" aria-hidden />
           </span>
-          Niche Doc Scanner
+          Addertje
         </Link>
         <nav className="flex items-center gap-1 text-sm">
           <Link href="/#hoe-het-werkt" className="hidden rounded-md px-3 py-2 text-muted-foreground hover:text-foreground sm:block">

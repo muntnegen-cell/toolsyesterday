@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cn, formatEuro } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Mijn rapporten — Niche Doc Scanner",
+  title: "Mijn rapporten — Addertje",
   robots: { index: false, follow: false },
 };
 

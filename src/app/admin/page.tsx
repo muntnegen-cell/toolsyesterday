@@ -10,7 +10,7 @@ import { requireAdmin } from "@/lib/auth";
 import { formatEuro } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Beheer — Niche Doc Scanner",
+  title: "Beheer — Addertje",
   robots: { index: false, follow: false },
 };
 

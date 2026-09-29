@@ -80,7 +80,7 @@ const SAMPLE_FINDINGS: Finding[] = [
 const FAQ = [
   {
     q: "Is dit juridisch advies?",
-    a: "Nee. Niche Doc Scanner is een geautomatiseerde eerste check die je helpt risico's te herkennen en betere vragen te stellen. Bij grote belangen of twijfel raden we altijd een jurist aan.",
+    a: "Nee. Addertje is een geautomatiseerde eerste check die je helpt risico's te herkennen en betere vragen te stellen. Bij grote belangen of twijfel raden we altijd een jurist aan.",
   },
   {
     q: "Wat gebeurt er met mijn contract?",
